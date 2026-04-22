@@ -210,7 +210,6 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               const SizedBox(height: 24),
-
               if (isRegisterMode) ...[
                 TextField(
                   controller: nameController,
@@ -221,7 +220,6 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 12),
               ],
-
               TextField(
                 controller: emailController,
                 decoration: const InputDecoration(
@@ -230,7 +228,6 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               const SizedBox(height: 12),
-
               TextField(
                 controller: passwordController,
                 obscureText: true,
@@ -240,7 +237,6 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               const SizedBox(height: 12),
-
               if (isRegisterMode) ...[
                 DropdownButtonFormField<String>(
                   value: selectedRole,
@@ -266,11 +262,8 @@ class _HomePageState extends State<HomePage> {
                 const SizedBox(height: 20),
               ] else
                 const SizedBox(height: 8),
-
               ElevatedButton(
-                onPressed: isLoading
-                    ? null
-                    : (isRegisterMode ? signUp : signIn),
+                onPressed: isLoading ? null : (isRegisterMode ? signUp : signIn),
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 48),
                 ),
@@ -279,7 +272,6 @@ class _HomePageState extends State<HomePage> {
                     : Text(isRegisterMode ? "Kayıt Ol" : "Giriş Yap"),
               ),
               const SizedBox(height: 8),
-
               TextButton(
                 onPressed: isLoading
                     ? null
@@ -449,6 +441,22 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                 ),
                 const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const ProfilePage(),
+                      ),
+                    );
+                    await loadProfile();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 48),
+                  ),
+                  child: const Text("Profilim"),
+                ),
+                const SizedBox(height: 10),
                 if (profile?['role'] == 'patient') ...[
                   ElevatedButton(
                     onPressed: () {
@@ -566,6 +574,137 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class ProfilePage extends StatefulWidget {
+  const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  Map<String, dynamic>? profile;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    loadProfile();
+  }
+
+  Future<void> loadProfile() async {
+    try {
+      final user = supabase.auth.currentUser;
+      if (user == null) {
+        setState(() => isLoading = false);
+        return;
+      }
+
+      final data =
+      await supabase.from('profiles').select().eq('id', user.id).maybeSingle();
+
+      setState(() {
+        profile = data;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() => isLoading = false);
+    }
+  }
+
+  String get roleText {
+    final role = profile?['role'];
+    if (role == 'doctor') return 'Doktor';
+    if (role == 'patient') return 'Hasta';
+    return 'Belirsiz';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final user = supabase.auth.currentUser;
+    final fullName = profile?['full_name'] ?? 'Bulunamadı';
+    final email = user?.email ?? profile?['email'] ?? 'Bulunamadı';
+    final createdAt = formatDateTime(profile?['created_at']);
+    final userId = user?.id ?? profile?['id'] ?? '-';
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Profilim"),
+        centerTitle: true,
+      ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            CircleAvatar(
+              radius: 45,
+              child: Text(
+                fullName.toString().isNotEmpty
+                    ? fullName.toString()[0].toUpperCase()
+                    : '?',
+                style: const TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              fullName,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.person_outline),
+                title: const Text("Ad Soyad"),
+                subtitle: Text(fullName),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.email_outlined),
+                title: const Text("Email"),
+                subtitle: Text(email),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.badge_outlined),
+                title: const Text("Rol"),
+                subtitle: Text(roleText),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.calendar_month_outlined),
+                title: const Text("Kayıt Tarihi"),
+                subtitle: Text(createdAt),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.fingerprint),
+                title: const Text("Kullanıcı ID"),
+                subtitle: Text(userId),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1382,7 +1521,8 @@ class PatientExaminationsPage extends StatefulWidget {
   const PatientExaminationsPage({super.key});
 
   @override
-  State<PatientExaminationsPage> createState() => _PatientExaminationsPageState();
+  State<PatientExaminationsPage> createState() =>
+      _PatientExaminationsPageState();
 }
 
 class _PatientExaminationsPageState extends State<PatientExaminationsPage> {
@@ -1441,8 +1581,9 @@ class _PatientExaminationsPageState extends State<PatientExaminationsPage> {
                 children: [
                   Text(
                     "Tarih: ${formatDateTime(item['created_at'])}",
-                    style:
-                    const TextStyle(fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 10),
                   Text("Şikayet: ${item['complaint'] ?? ''}"),
