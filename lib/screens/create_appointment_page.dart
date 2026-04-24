@@ -15,8 +15,16 @@ class _CreateAppointmentPageState extends State<CreateAppointmentPage> {
   List doctors = [];
   String? selectedDoctorId;
   DateTime? selectedDate;
+  String? selectedTime;
   final noteController = TextEditingController();
   bool isLoading = false;
+
+  final List<String> timeSlots = [
+    "09:00","09:30","10:00","10:30",
+    "11:00","11:30","12:00","12:30",
+    "13:00","13:30","14:00","14:30",
+    "15:00","15:30","16:00","16:30",
+  ];
 
   @override
   void initState() {
@@ -29,13 +37,30 @@ class _CreateAppointmentPageState extends State<CreateAppointmentPage> {
     setState(() => doctors = res);
   }
 
+  bool isWeekday(DateTime date) {
+    final day = date.weekday;
+    return day != DateTime.saturday && day != DateTime.sunday;
+  }
+
   Future<void> createAppointment() async {
     final user = supabase.auth.currentUser;
 
-    if (selectedDoctorId == null || selectedDate == null) {
-      showMessage("Doktor ve tarih seçmelisiniz");
+    if (selectedDoctorId == null || selectedDate == null || selectedTime == null) {
+      showMessage("Doktor, tarih ve saat seçmelisiniz");
       return;
     }
+
+    final parts = selectedTime!.split(":");
+    final hour = int.parse(parts[0]);
+    final minute = int.parse(parts[1]);
+
+    final finalDate = DateTime(
+      selectedDate!.year,
+      selectedDate!.month,
+      selectedDate!.day,
+      hour,
+      minute,
+    );
 
     setState(() => isLoading = true);
 
@@ -43,7 +68,7 @@ class _CreateAppointmentPageState extends State<CreateAppointmentPage> {
       await supabase.from('appointments').insert({
         'patient_id': user!.id,
         'doctor_id': selectedDoctorId,
-        'appointment_date': selectedDate!.toIso8601String(),
+        'appointment_date': finalDate.toIso8601String(),
         'status': 'bekliyor',
         'note': noteController.text.trim(),
       });
@@ -81,24 +106,20 @@ class _CreateAppointmentPageState extends State<CreateAppointmentPage> {
 
     if (date == null) return;
 
-    if (!mounted) return;
-
-    final time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-
-    if (time == null) return;
+    if (!isWeekday(date)) {
+      showMessage("Hafta sonu randevu alınamaz");
+      return;
+    }
 
     setState(() {
-      selectedDate = DateTime(
-        date.year,
-        date.month,
-        date.day,
-        time.hour,
-        time.minute,
-      );
+      selectedDate = date;
+      selectedTime = null;
     });
+  }
+
+  String getSelectedDateText() {
+    if (selectedDate == null) return "Tarih seç";
+    return "${selectedDate!.day}.${selectedDate!.month}.${selectedDate!.year}";
   }
 
   @override
@@ -135,7 +156,9 @@ class _CreateAppointmentPageState extends State<CreateAppointmentPage> {
                 });
               },
             ),
+
             const SizedBox(height: 16),
+
             TextField(
               controller: noteController,
               maxLines: 3,
@@ -144,19 +167,38 @@ class _CreateAppointmentPageState extends State<CreateAppointmentPage> {
                 border: OutlineInputBorder(),
               ),
             ),
+
             const SizedBox(height: 16),
+
             ElevatedButton(
               onPressed: pickDate,
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 48),
-              ),
-              child: Text(
-                selectedDate == null
-                    ? 'Tarih ve saat seç'
-                    : formatDateTime(selectedDate),
-              ),
+              child: Text(getSelectedDateText()),
             ),
+
             const SizedBox(height: 16),
+
+            if (selectedDate != null)
+              DropdownButtonFormField<String>(
+                value: selectedTime,
+                hint: const Text("Saat seç"),
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                ),
+                items: timeSlots.map((time) {
+                  return DropdownMenuItem(
+                    value: time,
+                    child: Text(time),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    selectedTime = value;
+                  });
+                },
+              ),
+
+            const SizedBox(height: 16),
+
             ElevatedButton(
               onPressed: isLoading ? null : createAppointment,
               style: ElevatedButton.styleFrom(
