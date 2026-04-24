@@ -20,6 +20,18 @@ class _HomePageState extends State<HomePage> {
   bool isRegisterMode = false;
   String selectedRole = 'patient';
 
+  String getAuthErrorMessage(dynamic e) {
+    final error = e.toString().toLowerCase();
+
+    if (error.contains('invalid login credentials')) {
+      return 'E-posta veya şifre hatalı.';
+    } else if (error.contains('user not found')) {
+      return 'Bu e-posta ile kayıtlı kullanıcı bulunamadı';
+    } else {
+      return 'Bir hata oluştu, tekrar deneyin';
+    }
+  }
+
   Future<void> signIn() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
@@ -51,11 +63,9 @@ class _HomePageState extends State<HomePage> {
         );
       }
     } catch (e) {
-      showMessage('Giriş hatası: $e');
+      showMessage(getAuthErrorMessage(e));
     } finally {
-      if (mounted) {
-        setState(() => isLoading = false);
-      }
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
@@ -96,7 +106,8 @@ class _HomePageState extends State<HomePage> {
         );
 
         if (!mounted) return;
-        showMessage("Kayıt başarılı! Şimdi giriş yapabilirsiniz.");
+
+        showMessage("Kayıt başarılı! Giriş yapabilirsiniz.");
 
         setState(() {
           isRegisterMode = false;
@@ -105,26 +116,32 @@ class _HomePageState extends State<HomePage> {
         });
       }
     } catch (e) {
-      showMessage('Kayıt hatası: $e');
+      showMessage(getAuthErrorMessage(e));
     } finally {
-      if (mounted) {
-        setState(() => isLoading = false);
-      }
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
   void showMessage(String m) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(m)),
+      SnackBar(
+        content: Text(m),
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 
-  @override
-  void dispose() {
-    nameController.dispose();
-    emailController.dispose();
-    passwordController.dispose();
-    super.dispose();
+  InputDecoration inputStyle(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon),
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+    );
   }
 
   @override
@@ -132,107 +149,130 @@ class _HomePageState extends State<HomePage> {
     final title = isRegisterMode ? "Kayıt Ol" : "Giriş Yap";
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            minHeight: MediaQuery.of(context).size.height - 140,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF4A90E2), Color(0xFF6FB1FC)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                "Klinik Randevu Sistemi",
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Card(
+              elevation: 8,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
               ),
-              const SizedBox(height: 24),
-              if (isRegisterMode) ...[
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: "Ad Soyad",
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-              ],
-              TextField(
-                controller: emailController,
-                decoration: const InputDecoration(
-                  labelText: "Email",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: "Şifre",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              if (isRegisterMode) ...[
-                DropdownButtonFormField<String>(
-                  value: selectedRole,
-                  decoration: const InputDecoration(
-                    labelText: 'Rol Seç',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: const [
-                    DropdownMenuItem(
-                      value: 'patient',
-                      child: Text('Hasta'),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    const Icon(Icons.local_hospital,
+                        size: 60, color: Colors.blue),
+                    const SizedBox(height: 10),
+
+                    Text(
+                      "Klinik Randevu Sistemi",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade800,
+                      ),
                     ),
-                    DropdownMenuItem(
-                      value: 'doctor',
-                      child: Text('Doktor'),
+
+                    const SizedBox(height: 20),
+
+                    if (isRegisterMode) ...[
+                      TextField(
+                        controller: nameController,
+                        decoration: inputStyle("Ad Soyad", Icons.person),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+
+                    TextField(
+                      controller: emailController,
+                      decoration: inputStyle("Email", Icons.email),
                     ),
-                  ],
-                  onChanged: (v) {
-                    if (v == null) return;
-                    setState(() => selectedRole = v);
-                  },
-                ),
-                const SizedBox(height: 20),
-              ] else
-                const SizedBox(height: 8),
-              ElevatedButton(
-                onPressed:
-                    isLoading ? null : (isRegisterMode ? signUp : signIn),
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 48),
-                ),
-                child: isLoading
-                    ? const CircularProgressIndicator()
-                    : Text(isRegisterMode ? "Kayıt Ol" : "Giriş Yap"),
-              ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: isLoading
-                    ? null
-                    : () {
+
+                    const SizedBox(height: 12),
+
+                    TextField(
+                      controller: passwordController,
+                      obscureText: true,
+                      decoration: inputStyle("Şifre", Icons.lock),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    if (isRegisterMode) ...[
+                      DropdownButtonFormField<String>(
+                        value: selectedRole,
+                        decoration:
+                        inputStyle("Rol Seç", Icons.person_outline),
+                        items: const [
+                          DropdownMenuItem(
+                            value: 'patient',
+                            child: Text('Hasta'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'doctor',
+                            child: Text('Doktor'),
+                          ),
+                        ],
+                        onChanged: (v) {
+                          if (v == null) return;
+                          setState(() => selectedRole = v);
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: isLoading
+                            ? null
+                            : (isRegisterMode ? signUp : signIn),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: isLoading
+                            ? const CircularProgressIndicator(
+                          color: Colors.white,
+                        )
+                            : Text(
+                          isRegisterMode ? "Kayıt Ol" : "Giriş Yap",
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    TextButton(
+                      onPressed: () {
                         setState(() {
                           isRegisterMode = !isRegisterMode;
                           nameController.clear();
                           passwordController.clear();
                         });
                       },
-                child: Text(
-                  isRegisterMode
-                      ? "Zaten hesabın var mı? Giriş yap"
-                      : "Hesabın yok mu? Kayıt ol",
+                      child: Text(
+                        isRegisterMode
+                            ? "Zaten hesabın var mı? Giriş yap"
+                            : "Hesabın yok mu? Kayıt ol",
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ),
