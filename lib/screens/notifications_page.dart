@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../core/supabase_client.dart';
+import 'patient_appointments_page.dart';
+import 'patient_examinations_page.dart';
 
 class NotificationsPage extends StatefulWidget {
   const NotificationsPage({super.key});
@@ -44,10 +46,14 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
   Future<void> openNotification(Map item) async {
     try {
+      final title = (item['title'] ?? '').toString().toLowerCase();
+
+      // önce read yap
       await supabase
           .from('notifications')
           .update({'is_read': true}).eq('id', item['id']);
 
+      // sonra sil
       await supabase.from('notifications').delete().eq('id', item['id']);
 
       if (!mounted) return;
@@ -55,6 +61,23 @@ class _NotificationsPageState extends State<NotificationsPage> {
       setState(() {
         notifications.removeWhere((n) => n['id'] == item['id']);
       });
+
+      // 🔥 YÖNLENDİRME
+      if (title.contains('randevu')) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const PatientAppointmentsPage(),
+          ),
+        );
+      } else if (title.contains('muayene')) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const PatientExaminationsPage(),
+          ),
+        );
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(item['message'] ?? 'Bildirim açıldı')),
@@ -67,6 +90,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
     }
   }
 
+  Color getBackgroundColor(Map item) {
+    final isRead = item['is_read'] ?? false;
+
+    return isRead ? Colors.white : Colors.blue.shade50;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -77,21 +106,35 @@ class _NotificationsPageState extends State<NotificationsPage> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : notifications.isEmpty
-              ? const Center(child: Text("Bildirim yok"))
-              : ListView.builder(
-                  itemCount: notifications.length,
-                  itemBuilder: (context, index) {
-                    final item = notifications[index];
-                    return Card(
-                      child: ListTile(
-                        leading: const Icon(Icons.notifications_active),
-                        title: Text(item['title'] ?? 'Bildirim'),
-                        subtitle: Text(item['message'] ?? ''),
-                        onTap: () => openNotification(item),
-                      ),
-                    );
-                  },
+          ? const Center(child: Text("Bildirim yok"))
+          : ListView.builder(
+        itemCount: notifications.length,
+        itemBuilder: (context, index) {
+          final item = notifications[index];
+
+          return Card(
+            color: getBackgroundColor(item),
+            child: ListTile(
+              leading: Icon(
+                Icons.notifications_active,
+                color: item['is_read'] == true
+                    ? Colors.grey
+                    : Colors.blue,
+              ),
+              title: Text(
+                item['title'] ?? 'Bildirim',
+                style: TextStyle(
+                  fontWeight: item['is_read'] == true
+                      ? FontWeight.normal
+                      : FontWeight.bold,
                 ),
+              ),
+              subtitle: Text(item['message'] ?? ''),
+              onTap: () => openNotification(item),
+            ),
+          );
+        },
+      ),
     );
   }
 }
