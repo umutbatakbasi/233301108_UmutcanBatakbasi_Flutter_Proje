@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-
 import '../core/supabase_client.dart';
 import '../core/utils.dart';
 import '../services/log_service.dart';
-
+//
 class ExaminationFormPage extends StatefulWidget {
   final Map appointment;
 
