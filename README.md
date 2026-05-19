@@ -43,13 +43,16 @@ Sistem:
 olmak üzere iki farklı kullanıcı rolü ile çalışmaktadır.
 
 ---
+
 # 📸 Uygulama Görselleri
 <p align="center">
   <img src="photos/login.png" width="220"/>
   <img src="photos/Hasta/patient_panel.png" width="220"/>
   <img src="photos/Doktor/doctor_panel.png" width="220"/>
 </p>
+
 ---
+
 # 🧩 Kullanılan Teknolojiler
 
 ## Frontend
