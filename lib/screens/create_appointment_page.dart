@@ -8,22 +8,40 @@ class CreateAppointmentPage extends StatefulWidget {
   const CreateAppointmentPage({super.key});
 
   @override
-  State<CreateAppointmentPage> createState() => _CreateAppointmentPageState();
+  State<CreateAppointmentPage> createState() =>
+      _CreateAppointmentPageState();
 }
 
-class _CreateAppointmentPageState extends State<CreateAppointmentPage> {
+class _CreateAppointmentPageState
+    extends State<CreateAppointmentPage> {
   List doctors = [];
+  List bookedSlots = [];
+
   String? selectedDoctorId;
   DateTime? selectedDate;
   String? selectedTime;
+
   final noteController = TextEditingController();
+
   bool isLoading = false;
 
   final List<String> timeSlots = [
-    "09:00","09:30","10:00","10:30",
-    "11:00","11:30","12:00","12:30",
-    "13:00","13:30","14:00","14:30",
-    "15:00","15:30","16:00","16:30",
+    "09:00",
+    "09:30",
+    "10:00",
+    "10:30",
+    "11:00",
+    "11:30",
+    "12:00",
+    "12:30",
+    "13:00",
+    "13:30",
+    "14:00",
+    "14:30",
+    "15:00",
+    "15:30",
+    "16:00",
+    "16:30",
   ];
 
   @override
@@ -33,24 +51,62 @@ class _CreateAppointmentPageState extends State<CreateAppointmentPage> {
   }
 
   Future<void> loadDoctors() async {
-    final res = await supabase.from('profiles').select().eq('role', 'doctor');
+    final res =
+    await supabase.from('profiles').select().eq('role', 'doctor');
+
     setState(() => doctors = res);
+  }
+
+  Future<void> loadBookedSlots() async {
+    if (selectedDoctorId == null || selectedDate == null) return;
+
+    final start = DateTime(
+      selectedDate!.year,
+      selectedDate!.month,
+      selectedDate!.day,
+    );
+
+    final end = start.add(const Duration(days: 1));
+
+    final data = await supabase
+        .from('appointments')
+        .select('appointment_date')
+        .eq('doctor_id', selectedDoctorId!)
+        .gte('appointment_date', start.toIso8601String())
+        .lt('appointment_date', end.toIso8601String());
+
+    bookedSlots = data.map<String>((item) {
+      final dt = DateTime.parse(item['appointment_date']);
+      return "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
+    }).toList();
+
+    setState(() {});
   }
 
   bool isWeekday(DateTime date) {
     final day = date.weekday;
-    return day != DateTime.saturday && day != DateTime.sunday;
+
+    return day != DateTime.saturday &&
+        day != DateTime.sunday;
   }
 
   Future<void> createAppointment() async {
     final user = supabase.auth.currentUser;
 
-    if (selectedDoctorId == null || selectedDate == null || selectedTime == null) {
+    if (selectedDoctorId == null ||
+        selectedDate == null ||
+        selectedTime == null) {
       showMessage("Doktor, tarih ve saat seçmelisiniz");
       return;
     }
 
+    if (bookedSlots.contains(selectedTime)) {
+      showMessage("Bu saat dolu");
+      return;
+    }
+
     final parts = selectedTime!.split(":");
+
     final hour = int.parse(parts[0]);
     final minute = int.parse(parts[1]);
 
@@ -79,10 +135,12 @@ class _CreateAppointmentPageState extends State<CreateAppointmentPage> {
       );
 
       if (!mounted) return;
+
       showMessage("Randevu oluşturuldu");
+
       Navigator.pop(context);
     } catch (e) {
-      showMessage("Hata: $e");
+      showMessage("Bu saate başka randevu alınmış olabilir");
     } finally {
       if (mounted) {
         setState(() => isLoading = false);
@@ -115,10 +173,13 @@ class _CreateAppointmentPageState extends State<CreateAppointmentPage> {
       selectedDate = date;
       selectedTime = null;
     });
+
+    await loadBookedSlots();
   }
 
   String getSelectedDateText() {
     if (selectedDate == null) return "Tarih seç";
+
     return "${selectedDate!.day}.${selectedDate!.month}.${selectedDate!.year}";
   }
 
@@ -144,16 +205,19 @@ class _CreateAppointmentPageState extends State<CreateAppointmentPage> {
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
               ),
-              items: doctors.map<DropdownMenuItem<String>>((doc) {
+              items:
+              doctors.map<DropdownMenuItem<String>>((doc) {
                 return DropdownMenuItem<String>(
                   value: doc['id'] as String,
                   child: Text(doc['full_name'] ?? ''),
                 );
               }).toList(),
-              onChanged: (value) {
+              onChanged: (value) async {
                 setState(() {
                   selectedDoctorId = value;
                 });
+
+                await loadBookedSlots();
               },
             ),
 
@@ -185,9 +249,22 @@ class _CreateAppointmentPageState extends State<CreateAppointmentPage> {
                   border: OutlineInputBorder(),
                 ),
                 items: timeSlots.map((time) {
+                  final isBooked =
+                  bookedSlots.contains(time);
+
                   return DropdownMenuItem(
-                    value: time,
-                    child: Text(time),
+                    value: isBooked ? null : time,
+                    enabled: !isBooked,
+                    child: Text(
+                      isBooked
+                          ? "$time (Dolu)"
+                          : time,
+                      style: TextStyle(
+                        color: isBooked
+                            ? Colors.grey
+                            : Colors.black,
+                      ),
+                    ),
                   );
                 }).toList(),
                 onChanged: (value) {
@@ -200,9 +277,11 @@ class _CreateAppointmentPageState extends State<CreateAppointmentPage> {
             const SizedBox(height: 16),
 
             ElevatedButton(
-              onPressed: isLoading ? null : createAppointment,
+              onPressed:
+              isLoading ? null : createAppointment,
               style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 48),
+                minimumSize:
+                const Size(double.infinity, 48),
               ),
               child: const Text("Randevu Al"),
             ),

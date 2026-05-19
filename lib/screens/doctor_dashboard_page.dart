@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/supabase_client.dart';
 import '../services/log_service.dart';
 import 'doctor_appointments_page.dart';
+import 'doctor_upcoming_appointments_page.dart';
 import 'home_page.dart';
 import 'profile_page.dart';
 
@@ -219,6 +220,20 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                   context,
                   MaterialPageRoute(
                     builder: (_) => const DoctorAppointmentsPage(),
+                  ),
+                );
+                await loadAppointmentStats();
+              },
+            ),
+            menuCard(
+              icon: Icons.event_available,
+              title: "Randevuları Gör",
+              subtitle: "Gelecek tarihli tüm randevularını listele",
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const DoctorUpcomingAppointmentsPage(),
                   ),
                 );
                 await loadAppointmentStats();
