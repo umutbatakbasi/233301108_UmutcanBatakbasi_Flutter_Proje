@@ -1,79 +1,301 @@
-# Klinik Randevu ve Muayene Kayıt Sistemi
+# 🏥 Klinik Randevu ve Muayene Kayıt Sistemi
 
-Bu proje, Mobil Programlama dersi final projesi kapsamında geliştirilmiştir.  
-Uygulama Flutter ile geliştirilmiş, veri tabanı ve kimlik doğrulama işlemleri için Supabase kullanılmıştır.
+Mobil Programlama dersi final projesi kapsamında geliştirilmiş modern klinik yönetim uygulamasıdır.
 
-## Öğrenci Bilgileri
-Selçuk Üniversitesi Teknoloji Fakültesi Bilgisayar Mühendisliği
-Okul No         : 233301108
-Ad Soyad        : Umutcan Batakbaşı
-Sınıfı          : Normal Öğretim - 4. Sınıf
-Telefon         : (+90) 537 688 2588
+Bu uygulama sayesinde:
+- Hastalar online randevu oluşturabilir,
+- Doktorlar randevuları yönetebilir,
+- Muayene notları tutulabilir,
+- Bildirim sistemi ile kullanıcı bilgilendirmesi yapılabilir,
+- Klinik süreçleri dijital olarak yönetilebilir.
 
+---
 
-## Proje Özeti
+# 🎓 Öğrenci Bilgileri
 
-Uygulama iki farklı kullanıcı rolüne sahiptir:
+| Bilgi | Değer |
+|---|---|
+| Üniversite | Selçuk Üniversitesi |
+| Fakülte | Teknoloji Fakültesi |
+| Bölüm | Bilgisayar Mühendisliği |
+| Ders | Mobil Programlama |
+| Öğrenci No | 233301108 |
+| Ad Soyad | Umutcan Batakbaşı |
+| Sınıf | 4. Sınıf |
 
+---
+
+# 📱 Proje Özeti
+
+Uygulama Flutter kullanılarak geliştirilmiştir.
+
+Backend tarafında:
+- Supabase Authentication
+- Supabase PostgreSQL Database
+- Row Level Security (RLS)
+
+kullanılmıştır.
+
+Sistem:
 - Hasta
 - Doktor
 
-Sistemde kullanıcılar kayıt olabilir, giriş yapabilir, çıkış yapabilir ve oturum bilgileri uygulama kapatılıp açıldığında korunur.
+olmak üzere iki farklı kullanıcı rolü ile çalışmaktadır.
 
-## Kullanılan Teknolojiler
+---
 
+# 🧩 Kullanılan Teknolojiler
+
+## Frontend
 - Flutter
 - Dart
+- Material Design
+
+## Backend
 - Supabase Auth
 - Supabase Database
+- PostgreSQL
 
-## Uygulama Özellikleri
+## Mimari Yapı
+- Screen-based architecture
+- Service layer
+- Core utility structure
+- Widget-based UI design
 
-### Ortak Özellikler
-- Kayıt olma
-- Giriş yapma
+---
+
+# 📂 Proje Dosya Yapısı
+
+```text
+lib/
+│
+├── core/
+│   ├── supabase_client.dart
+│   └── utils.dart
+│
+├── services/
+│   └── log_service.dart
+│
+├── screens/
+│   ├── appointment_detail_page.dart
+│   ├── auth_gate.dart
+│   ├── create_appointment_page.dart
+│   ├── dashboard_page.dart
+│   ├── doctor_appointments_page.dart
+│   ├── doctor_dashboard_page.dart
+│   ├── doctor_upcoming_appointments_page.dart
+│   ├── examination_form_page.dart
+│   ├── home_page.dart
+│   ├── notifications_page.dart
+│   ├── patient_appointments_page.dart
+│   ├── patient_dashboard_page.dart
+│   ├── patient_examinations_page.dart
+│   └── profile_page.dart
+│
+├── app.dart
+└── main.dart
+```
+
+---
+
+# 🔐 Kimlik Doğrulama Sistemi
+
+Sistem Supabase Authentication kullanmaktadır.
+
+Özellikler:
+- Kullanıcı kayıt olma
+- Kullanıcı giriş yapma
 - Çıkış yapma
 - Oturumun korunması
-- Log kaydı tutma
+- Rol bazlı kullanıcı sistemi
 
-### Hasta Özellikleri
-- Randevu oluşturma
-- Randevularını görüntüleme
-- Doktor tarafından güncellenen randevu durumlarını görme
-- Bildirimleri görüntüleme
-- Muayene geçmişini görüntüleme
+---
 
-### Doktor Özellikleri
-- Kendisine gelen randevuları görüntüleme
-- Randevu detayını görüntüleme
-- Randevuyu onaylama / reddetme / iptal etme
-- Doktor notu ekleme
-- Muayene notu oluşturma ve güncelleme
+# 👨‍⚕️ Doktor Özellikleri
 
-## Veritabanı Tabloları
+## Randevu Yönetimi
+- Gelen randevuları görüntüleme
+- Randevu onaylama
+- Randevu reddetme
+- Randevu iptal etme
+- Gelecek randevuları listeleme
+
+## Muayene Sistemi
+- Muayene notu ekleme
+- Tanı ekleme
+- Tedavi bilgisi ekleme
+- Hasta geçmişini görüntüleme
+
+## Bildirim Sistemi
+- Tarih değişikliği bildirimi
+- Yeni randevu bildirimi
+- Durum güncelleme bildirimi
+
+---
+
+# 🧑‍💻 Hasta Özellikleri
+
+## Randevu Sistemi
+- Online randevu alma
+- Mesai saatleri kontrolü
+- Aynı saat çakışma kontrolü
+- Randevu güncelleme
+- 24 saat kuralı kontrolü
+
+## Bildirim Sistemi
+- Randevu onay bildirimi
+- Randevu red bildirimi
+- Muayene notu bildirimi
+- Yeni bildirim göstergesi
+
+## Muayene Geçmişi
+- Geçmiş muayeneleri görüntüleme
+- Doktor notlarını görüntüleme
+- Tanı ve tedavi bilgilerini görüntüleme
+
+---
+
+# ⏰ Mesai Saati Kontrolü
+
+Sistem yalnızca aşağıdaki zamanlarda randevu oluşturulmasına izin verir:
+
+| Günler | Saat |
+|---|---|
+| Pazartesi - Cuma | 09:00 - 17:00 |
+
+Hafta sonu randevu oluşturulamaz.
+
+---
+
+# 🔔 Bildirim Sistemi
+
+Uygulama içerisinde gerçek zamanlı bildirim sistemi bulunmaktadır.
+
+Özellikler:
+- Okunmamış bildirim göstergesi
+- Bildirim okundu kontrolü
+- Sayfa yönlendirmeli bildirim sistemi
+- Duruma göre bildirim üretimi
+
+---
+
+# 🗃️ Veritabanı Tabloları
 
 Projede aşağıdaki tablolar kullanılmaktadır:
 
-- profiles
-- appointments
-- notifications
-- examinations
-- logs
+| Tablo | Açıklama |
+|---|---|
+| profiles | Kullanıcı bilgileri |
+| appointments | Randevu kayıtları |
+| notifications | Bildirim sistemi |
+| examinations | Muayene kayıtları |
+| logs | Sistem log kayıtları |
 
-## Test Hesapları
+---
 
-### Doktor Hesabı
-- E-posta: doktor_test@mail.com
-- Şifre: doktor123456
+# 📋 Log Sistemi
 
-### Hasta Hesabı
-- E-posta: hasta_test@mail.com
-- Şifre: hasta123456
+Uygulama içerisinde yapılan işlemler kayıt altına alınmaktadır.
 
-## Kurulum ve Çalıştırma
+Örnek loglar:
+- Giriş işlemleri
+- Çıkış işlemleri
+- Randevu oluşturma
+- Randevu güncelleme
+- Muayene notu ekleme
 
-1. Proje klasörünü açın.
-2. Terminalde aşağıdaki komutu çalıştırın:
+---
+
+# 🧪 Test Hesapları
+
+## Doktor Hesabı
+
+| Bilgi | Değer |
+|---|---|
+| E-Posta | doktor_test@mail.com |
+| Şifre | doktor123456 |
+
+---
+
+## Hasta Hesabı
+
+| Bilgi | Değer |
+|---|---|
+| E-Posta | hasta_test@mail.com |
+| Şifre | hasta123456 |
+
+---
+
+# ⚙️ Kurulum
+
+## 1. Projeyi Klonlayın
+
+```bash
+git clone https://github.com/umutbatakbasi/233301108_UmutcanBatakbasi_Flutter_Proje
+```
+
+---
+
+## 2. Proje Klasörüne Girin
+
+```bash
+cd klinik_app
+```
+
+---
+
+## 3. Paketleri Kurun
 
 ```bash
 flutter pub get
+```
+
+---
+
+## 4. Uygulamayı Çalıştırın
+
+```bash
+flutter run
+```
+
+---
+
+# 🚀 Öne Çıkan Özellikler
+
+✅ Modern Flutter arayüzü  
+✅ Supabase entegrasyonu  
+✅ Rol bazlı kullanıcı sistemi  
+✅ Klinik yönetim mantığı  
+✅ Bildirim sistemi  
+✅ Randevu yönetim sistemi  
+✅ Muayene geçmişi sistemi  
+✅ Responsive tasarım  
+✅ Modüler proje mimarisi  
+✅ Log sistemi  
+
+---
+
+# 📌 Gereksinim Karşılamaları
+
+| Gereksinim | Durum |
+|---|---|
+| İki farklı kullanıcı rolü | ✅ |
+| Supabase/Firebase kullanımı | ✅ |
+| Auth sistemi | ✅ |
+| Kalıcı oturum | ✅ |
+| En az 5 ekran | ✅ |
+| Log sistemi | ✅ |
+| README test hesapları | ✅ |
+
+---
+
+# 👨‍💻 Geliştirici
+
+**Umutcan Batakbaşı**  
+Selçuk Üniversitesi - Bilgisayar Mühendisliği
+
+---
+
+# ⭐ Not
+
+Bu proje eğitim amaçlı geliştirilmiştir.
